@@ -107,7 +107,7 @@ router.post('/login/mobile', async (req: Request, res: Response) => {
     const otp = await otpService.createOTP(user.id, mobile, OTPType.MOBILE);
     await smsService.sendOTP(mobile, otp);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'OTP sent to mobile number',
       userId: user.id,
@@ -139,7 +139,7 @@ router.post('/login/email', async (req: Request, res: Response) => {
     const otp = await otpService.createOTP(user.id, email, OTPType.EMAIL);
     await emailService.sendOTP(email, otp);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'OTP sent to email',
       userId: user.id,
@@ -182,7 +182,7 @@ router.post('/verify', async (req: Request, res: Response) => {
       },
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'OTP verified successfully',
       token,
@@ -211,7 +211,7 @@ router.get('/logout', async (req: Request, res: Response) => {
     const token = authHeader.substring(7);
     await authService.revokeSession(token);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Logged out successfully',
     });
