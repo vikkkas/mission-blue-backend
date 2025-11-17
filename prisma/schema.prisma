@@ -21,6 +21,7 @@ model User {
 
   otps      OTP[]
   sessions  Session[]
+  attendee  Attendee? // One-to-one relationship
 
   @@index([mobile])
   @@index([email])
@@ -56,4 +57,153 @@ model Session {
 
   @@index([userId])
   @@index([token])
+}
+
+// Mission Blue Attendee Registration
+model Attendee {
+  id                       String    @id @default(cuid())
+  userId                   String    @unique
+  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // A. Personal Information
+  fullName                 String
+  dateOfBirth              DateTime
+  gender                   Gender
+  nationality              String
+  documentNumber           String?
+  
+  // B. Contact Information (will come from User model but can be updated here)
+  mobileNumber             String
+  alternateContactNumber   String?
+  residentialAddress       String
+  pinCode                  String
+  
+  // C. Professional Details
+  organization             String
+  designation              String
+  industry                 Industry
+  linkedinUrl              String?
+  
+  // D. Event-Specific Details
+  attendanceType           AttendanceType
+  daysAttending            String[]  // ["Day 1", "Day 2", "Day 3"]
+  sessionsInterested       String[]  // Multi-select sessions
+  accommodationRequired    Boolean   @default(false)
+  mealPreference           MealPreference
+  tshirtSize               TShirtSize
+  
+  // E. Identification & Uploads (S3 URLs)
+  photoUploadUrl           String?
+  idProofUploadUrl         String?
+  studentIdUploadUrl       String?
+  
+  // F. Emergency Details
+  emergencyContactName     String
+  emergencyContactNumber   String
+  emergencyRelationship    String
+  
+  // G. Consent & Verification
+  termsAccepted            Boolean   @default(false)
+  photoVideoConsent        Boolean   @default(false)
+  dataPrivacyAgreement     Boolean   @default(false)
+  
+  // H. Optional Analytics
+  heardAboutEvent          HeardAboutEvent?
+  volunteerInterest        Boolean   @default(false)
+  areasOfInterest          String[]
+  
+  // I. Payment & Registration Status
+  paymentStatus            PaymentStatus @default(PENDING)
+  paymentId                String?
+  paymentAmount            Float?
+  paymentDate              DateTime?
+  registrationStatus       RegistrationStatus @default(PENDING)
+  
+  // Metadata
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([mobileNumber])
+  @@index([registrationStatus])
+  @@index([attendanceType])
+  @@index([industry])
+  @@index([createdAt])
+}
+
+// Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum Industry {
+  TECHNOLOGY
+  EDUCATION
+  HEALTHCARE
+  FINANCE
+  MANUFACTURING
+  RETAIL
+  CONSULTING
+  GOVERNMENT
+  NON_PROFIT
+  MEDIA
+  HOSPITALITY
+  REAL_ESTATE
+  AGRICULTURE
+  ENERGY
+  TRANSPORTATION
+  TELECOMMUNICATIONS
+  LEGAL
+  ENTERTAINMENT
+  CONSTRUCTION
+  OTHER
+}
+
+enum AttendanceType {
+  IN_PERSON
+  VIRTUAL
+}
+
+enum MealPreference {
+  VEG
+  NON_VEG
+  VEGAN
+  JAIN
+  OTHER
+}
+
+enum TShirtSize {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+}
+
+enum HeardAboutEvent {
+  SOCIAL_MEDIA
+  FRIEND
+  EMAIL
+  POSTER
+  GDG
+  OTHER
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  WAITLISTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
 }

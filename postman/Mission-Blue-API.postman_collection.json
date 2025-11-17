@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Mission Blue Backend API",
-    "description": "API collection for Mission Blue backend with mobile/email OTP authentication",
+    "description": "Complete API collection for Mission Blue event registration system with authentication, attendee onboarding, and admin tools.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -14,6 +14,11 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -23,21 +28,30 @@
         {
           "name": "Health Check",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "http://localhost:3000/health",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "3000",
-              "path": ["health"]
-            }
-          }
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Quick readiness probe for the Mission Blue backend service"
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "Auth",
+      "name": "Authentication",
       "item": [
         {
           "name": "Register with Mobile",
@@ -45,16 +59,26 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.userId) {",
+                  "    pm.collectionVariables.set('userId', json.userId);",
+                  "    console.log('Stored userId', json.userId);",
+                  "  } else if (json && json.data && json.data.user && json.data.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.data.user.id);",
+                  "    console.log('Stored userId', json.data.user.id);",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -64,14 +88,22 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"+1234567890\",\n  \"name\": \"John Doe\"\n}"
+              "raw": "{\n  \"mobile\": \"+919876543210\",\n  \"name\": \"John Doe\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register/mobile",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register", "mobile"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "mobile"
+              ]
+            },
+            "description": "Registers a new attendee using a verified mobile number and sends OTP."
+          },
+          "response": []
         },
         {
           "name": "Register with Email",
@@ -79,16 +111,26 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.userId) {",
+                  "    pm.collectionVariables.set('userId', json.userId);",
+                  "    console.log('Stored userId', json.userId);",
+                  "  } else if (json && json.data && json.data.user && json.data.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.data.user.id);",
+                  "    console.log('Stored userId', json.data.user.id);",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -102,10 +144,18 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register/email",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register", "email"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "email"
+              ]
+            },
+            "description": "Registers a new attendee using email OTP flow."
+          },
+          "response": []
         },
         {
           "name": "Login with Mobile",
@@ -113,16 +163,26 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.userId) {",
+                  "    pm.collectionVariables.set('userId', json.userId);",
+                  "    console.log('Stored userId', json.userId);",
+                  "  } else if (json && json.data && json.data.user && json.data.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.data.user.id);",
+                  "    console.log('Stored userId', json.data.user.id);",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -132,14 +192,22 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"+1234567890\"\n}"
+              "raw": "{\n  \"mobile\": \"+919876543210\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login/mobile",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login", "mobile"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "mobile"
+              ]
+            },
+            "description": "Starts OTP login for an existing mobile user."
+          },
+          "response": []
         },
         {
           "name": "Login with Email",
@@ -147,16 +215,26 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.userId) {",
+                  "    pm.collectionVariables.set('userId', json.userId);",
+                  "    console.log('Stored userId', json.userId);",
+                  "  } else if (json && json.data && json.data.user && json.data.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.data.user.id);",
+                  "    console.log('Stored userId', json.data.user.id);",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -170,10 +248,18 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login/email",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login", "email"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "email"
+              ]
+            },
+            "description": "Starts OTP login for an existing email user."
+          },
+          "response": []
         },
         {
           "name": "Verify OTP",
@@ -181,16 +267,26 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.collectionVariables.set(\"token\", response.token);",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Stored session token');",
+                  "  }",
+                  "  if (json && json.user && json.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.user.id);",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -200,78 +296,68 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contact\": \"+1234567890\",\n  \"code\": \"123456\"\n}"
+              "raw": "{\n  \"contact\": \"+919876543210\",\n  \"code\": \"123456\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "verify"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify"
+              ]
             },
-            "description": "Verify OTP code. Use mobile number or email as contact."
-          }
+            "description": "Verifies the OTP sent via SMS or email and issues a bearer token."
+          },
+          "response": []
         },
         {
           "name": "Logout",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
+            "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "logout"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes current session token."
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "User",
+      "name": "Users",
       "item": [
         {
           "name": "Get Profile",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/users/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "me"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Fetches the authenticated user's profile and verification status."
+          },
+          "response": []
         },
         {
           "name": "Update Profile",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PATCH",
             "header": [
               {
@@ -281,16 +367,437 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newemail@example.com\",\n  \"mobile\": \"+19876543210\"\n}"
+              "raw": "{\n  \"name\": \"John Mission\",\n  \"email\": \"updated@example.com\",\n  \"mobile\": \"+919812345678\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "me"]
-            }
-          }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Updates profile fields. Changing email/mobile will require OTP re-verification."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attendees",
+      "item": [
+        {
+          "name": "Submit Registration Form",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fullName",
+                  "value": "John Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1990-05-15",
+                  "type": "text",
+                  "description": "Use ISO date"
+                },
+                {
+                  "key": "gender",
+                  "value": "MALE",
+                  "type": "text",
+                  "description": "MALE | FEMALE | OTHER | PREFER_NOT_TO_SAY"
+                },
+                {
+                  "key": "nationality",
+                  "value": "Indian",
+                  "type": "text"
+                },
+                {
+                  "key": "documentNumber",
+                  "value": "A1234567",
+                  "type": "text",
+                  "description": "Passport/Aadhaar"
+                },
+                {
+                  "key": "mobileNumber",
+                  "value": "9876543210",
+                  "type": "text",
+                  "description": "10 digit Indian mobile"
+                },
+                {
+                  "key": "alternateContactNumber",
+                  "value": "9123456789",
+                  "type": "text",
+                  "description": "Optional"
+                },
+                {
+                  "key": "residentialAddress",
+                  "value": "123 Marine Drive, Mumbai, India",
+                  "type": "text"
+                },
+                {
+                  "key": "pinCode",
+                  "value": "400001",
+                  "type": "text",
+                  "description": "6 digit pin"
+                },
+                {
+                  "key": "organization",
+                  "value": "Mission Blue",
+                  "type": "text"
+                },
+                {
+                  "key": "designation",
+                  "value": "Program Manager",
+                  "type": "text"
+                },
+                {
+                  "key": "industry",
+                  "value": "TECHNOLOGY",
+                  "type": "text",
+                  "description": "See schema"
+                },
+                {
+                  "key": "linkedinUrl",
+                  "value": "https://linkedin.com/in/johndoe",
+                  "type": "text",
+                  "description": "Optional"
+                },
+                {
+                  "key": "attendanceType",
+                  "value": "IN_PERSON",
+                  "type": "text",
+                  "description": "IN_PERSON | VIRTUAL"
+                },
+                {
+                  "key": "daysAttending",
+                  "value": "[\"Day 1\", \"Day 2\"]",
+                  "type": "text",
+                  "description": "JSON array"
+                },
+                {
+                  "key": "sessionsInterested",
+                  "value": "[\"Keynotes\", \"Workshops\"]",
+                  "type": "text",
+                  "description": "JSON array"
+                },
+                {
+                  "key": "accommodationRequired",
+                  "value": "true",
+                  "type": "text",
+                  "description": "true | false"
+                },
+                {
+                  "key": "mealPreference",
+                  "value": "VEG",
+                  "type": "text",
+                  "description": "VEG | NON_VEG | VEGAN | JAIN | OTHER"
+                },
+                {
+                  "key": "tshirtSize",
+                  "value": "L",
+                  "type": "text",
+                  "description": "XS | S | M | L | XL | XXL"
+                },
+                {
+                  "key": "emergencyContactName",
+                  "value": "Jane Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "emergencyContactNumber",
+                  "value": "9123456789",
+                  "type": "text"
+                },
+                {
+                  "key": "emergencyRelationship",
+                  "value": "Spouse",
+                  "type": "text"
+                },
+                {
+                  "key": "termsAccepted",
+                  "value": "true",
+                  "type": "text",
+                  "description": "Must be true"
+                },
+                {
+                  "key": "photoVideoConsent",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "dataPrivacyAgreement",
+                  "value": "true",
+                  "type": "text",
+                  "description": "Must be true"
+                },
+                {
+                  "key": "heardAboutEvent",
+                  "value": "SOCIAL_MEDIA",
+                  "type": "text",
+                  "description": "Optional"
+                },
+                {
+                  "key": "volunteerInterest",
+                  "value": "false",
+                  "type": "text",
+                  "description": "Optional"
+                },
+                {
+                  "key": "areasOfInterest",
+                  "value": "[\"Sustainability\", \"Innovation\"]",
+                  "type": "text",
+                  "description": "JSON array Optional"
+                },
+                {
+                  "key": "photoUpload",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "idProofUpload",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "studentIdUpload",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees"
+              ]
+            },
+            "description": "Authenticated attendees submit the Mission Blue registration form with optional uploads."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Registration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendees/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees",
+                "me"
+              ]
+            },
+            "description": "Returns the logged-in user's registration details (if submitted)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Registration",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "organization",
+                  "value": "Mission Blue Labs",
+                  "type": "text"
+                },
+                {
+                  "key": "mealPreference",
+                  "value": "VEGAN",
+                  "type": "text"
+                },
+                {
+                  "key": "sessionsInterested",
+                  "value": "[\"Networking\", \"Hackathon\"]",
+                  "type": "text",
+                  "description": "JSON array"
+                },
+                {
+                  "key": "photoUpload",
+                  "type": "file",
+                  "src": [],
+                  "description": "Optional replacement photo"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendees/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees",
+                "me"
+              ]
+            },
+            "description": "Updates select registration fields and optionally replaces uploads."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Registration Statistics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendees/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees",
+                "stats"
+              ]
+            },
+            "description": "Aggregated metrics for the registration funnel."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Registrations (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendees?page=1&limit=10&search=john&registrationStatus=PENDING&industry=TECHNOLOGY&attendanceType=IN_PERSON&fromDate=2024-01-01&toDate=2024-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "john",
+                  "description": "Search across name/email/mobile"
+                },
+                {
+                  "key": "registrationStatus",
+                  "value": "PENDING",
+                  "description": "PENDING | CONFIRMED | CANCELLED | WAITLISTED"
+                },
+                {
+                  "key": "industry",
+                  "value": "TECHNOLOGY",
+                  "description": "Filter by industry"
+                },
+                {
+                  "key": "attendanceType",
+                  "value": "IN_PERSON",
+                  "description": "IN_PERSON | VIRTUAL"
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2024-01-01",
+                  "description": "Filter start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2024-12-31",
+                  "description": "Filter end date"
+                }
+              ]
+            },
+            "description": "Paginated admin view with filters and keyword search."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Registration by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendees/:attendeeId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees",
+                ":attendeeId"
+              ],
+              "variable": [
+                {
+                  "key": "attendeeId",
+                  "value": "cm3m1234567890abcdef",
+                  "description": "Attendee ID"
+                }
+              ]
+            },
+            "description": "Fetch a single attendee registration with linked user details."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Registration by ID (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendees/:attendeeId?deleteFiles=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendees",
+                ":attendeeId"
+              ],
+              "query": [
+                {
+                  "key": "deleteFiles",
+                  "value": "true",
+                  "description": "Set to false to retain S3 uploads"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "attendeeId",
+                  "value": "cm3m1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Deletes an attendee and optionally their uploaded assets from S3."
+          },
+          "response": []
         }
       ]
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
 }
