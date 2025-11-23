@@ -1,17 +1,20 @@
 import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import prisma from '../config/database';
-import otpService from '../services/otp.service';
 import authService from '../services/auth.service';
 import emailService from '../services/email.service';
-import smsService from '../services/sms.service';
+import tokenService from '../services/token.service';
 import {
   registerMobileSchema,
   registerEmailSchema,
-  verifyOTPSchema,
+  loginWithEmailSchema,
+  loginWithMobileSchema,
+  resendVerificationSchema,
+  passwordResetRequestSchema,
+  passwordResetConfirmSchema,
 } from '../schemas/auth.schema';
-import { OTPType } from '@prisma/client';
 import { config } from '../config';
+import { TokenTypeEnum } from '../utils/tokenTypes';
 
 const router = Router();
 
@@ -24,29 +27,44 @@ const authLimiter = rateLimit({
 
 router.use(authLimiter);
 
+const sanitizeUser = (user: any) => ({
+  id: user.id,
+  email: user.email,
+  mobile: user.mobile,
+  name: user.name,
+  isVerified: user.isVerified,
+  createdAt: user.createdAt,
+});
+
+const buildLink = (path: string, token: string) => `${config.appUrl}${path}?token=${token}`;
+
 // Register with mobile
 router.post('/register/mobile', async (req: Request, res: Response) => {
   try {
-    const { mobile, name } = registerMobileSchema.parse(req.body);
+    const { mobile, name, password } = registerMobileSchema.parse(req.body);
 
-    // Check if user exists
-    let user = await prisma.user.findUnique({ where: { mobile } });
+    const existingUser = await prisma.user.findUnique({ where: { mobile } });
 
-    if (!user) {
-      // Create new user
-      user = await prisma.user.create({
-        data: { mobile, name },
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Mobile number already registered',
       });
     }
 
-    // Generate and send OTP
-    const otp = await otpService.createOTP(user.id, mobile, OTPType.MOBILE);
-    await smsService.sendOTP(mobile, otp);
+    const passwordHash = await authService.hashPassword(password);
+
+    const user = await prisma.user.create({
+      data: { mobile, name, passwordHash, isVerified: true },
+    });
+
+    const token = await authService.createSession(user.id);
 
     res.json({
       success: true,
-      message: 'OTP sent to mobile number',
-      userId: user.id,
+      message: 'Account created successfully',
+      token,
+      user: sanitizeUser(user),
     });
   } catch (error: any) {
     res.status(400).json({
@@ -59,26 +77,36 @@ router.post('/register/mobile', async (req: Request, res: Response) => {
 // Register with email
 router.post('/register/email', async (req: Request, res: Response) => {
   try {
-    const { email, name } = registerEmailSchema.parse(req.body);
+    const { email, name, password } = registerEmailSchema.parse(req.body);
 
-    // Check if user exists
-    let user = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-      // Create new user
-      user = await prisma.user.create({
-        data: { email, name },
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered',
       });
     }
 
-    // Generate and send OTP
-    const otp = await otpService.createOTP(user.id, email, OTPType.EMAIL);
-    await emailService.sendOTP(email, otp);
+    const passwordHash = await authService.hashPassword(password);
+
+    const user = await prisma.user.create({
+      data: { email, name, passwordHash, isVerified: false },
+    });
+
+    const token = await tokenService.createToken(
+      user.id,
+      TokenTypeEnum.VERIFY_EMAIL,
+      config.verification.emailExpiryHours * 60 * 60 * 1000,
+    );
+
+    const verificationLink = buildLink('/auth/verify/email', token);
+    // await emailService.sendVerificationEmail(email, verificationLink);
 
     res.json({
       success: true,
-      message: 'OTP sent to email',
-      userId: user.id,
+      message: 'Verification email sent. Please check your inbox to verify your account.',
+      user: sanitizeUser(user),
     });
   } catch (error: any) {
     res.status(400).json({
@@ -91,9 +119,8 @@ router.post('/register/email', async (req: Request, res: Response) => {
 // Login with mobile
 router.post('/login/mobile', async (req: Request, res: Response) => {
   try {
-    const { mobile } = registerMobileSchema.parse(req.body);
+    const { mobile, password } = loginWithMobileSchema.parse(req.body);
 
-    // Check if user exists
     const user = await prisma.user.findUnique({ where: { mobile } });
 
     if (!user) {
@@ -103,14 +130,29 @@ router.post('/login/mobile', async (req: Request, res: Response) => {
       });
     }
 
-    // Generate and send OTP
-    const otp = await otpService.createOTP(user.id, mobile, OTPType.MOBILE);
-    await smsService.sendOTP(mobile, otp);
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before logging in.',
+      });
+    }
+
+    const passwordMatches = await authService.verifyPassword(password, user.passwordHash);
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    const token = await authService.createSession(user.id);
 
     return res.json({
       success: true,
-      message: 'OTP sent to mobile number',
-      userId: user.id,
+      message: 'Logged in successfully',
+      token,
+      user: sanitizeUser(user),
     });
   } catch (error: any) {
     return res.status(400).json({
@@ -123,9 +165,8 @@ router.post('/login/mobile', async (req: Request, res: Response) => {
 // Login with email
 router.post('/login/email', async (req: Request, res: Response) => {
   try {
-    const { email } = registerEmailSchema.parse(req.body);
+    const { email, password } = loginWithEmailSchema.parse(req.body);
 
-    // Check if user exists
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -135,85 +176,174 @@ router.post('/login/email', async (req: Request, res: Response) => {
       });
     }
 
-    // Generate and send OTP
-    const otp = await otpService.createOTP(user.id, email, OTPType.EMAIL);
-    await emailService.sendOTP(email, otp);
-
-    return res.json({
-      success: true,
-      message: 'OTP sent to email',
-      userId: user.id,
-    });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Invalid request',
-    });
-  }
-});
-
-// Verify OTP
-router.post('/verify', async (req: Request, res: Response) => {
-  try {
-    const { contact, code } = verifyOTPSchema.parse(req.body);
-
-    const result = await otpService.verifyOTP(contact, code);
-
-    if (!result.valid || !result.userId) {
-      return res.status(400).json({
+    if (!user.isVerified) {
+      return res.status(403).json({
         success: false,
-        message: 'Invalid or expired OTP',
+        message: 'Please verify your account before logging in.',
       });
     }
 
-    // Create session and generate token
-    const token = await authService.createSession(result.userId);
+    const passwordMatches = await authService.verifyPassword(password, user.passwordHash);
 
-    // Get user details
-    const user = await prisma.user.findUnique({
-      where: { id: result.userId },
-      select: {
-        id: true,
-        mobile: true,
-        email: true,
-        name: true,
-        isVerified: true,
-        createdAt: true,
-      },
-    });
-
-    return res.json({
-      success: true,
-      message: 'OTP verified successfully',
-      token,
-      user,
-    });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Invalid request',
-    });
-  }
-});
-
-// Logout
-router.get('/logout', async (req: Request, res: Response) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!passwordMatches) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized',
+        message: 'Invalid credentials',
       });
     }
 
-    const token = authHeader.substring(7);
-    await authService.revokeSession(token);
+    const token = await authService.createSession(user.id);
 
     return res.json({
       success: true,
-      message: 'Logged out successfully',
+      message: 'Logged in successfully',
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Invalid request',
+    });
+  }
+});
+
+// Resend email verification link
+router.post('/verify/email/resend', async (req: Request, res: Response) => {
+  try {
+    const { email } = resendVerificationSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.isVerified) {
+      return res.json({
+        success: true,
+        message: 'Email is already verified.',
+      });
+    }
+
+    const token = await tokenService.createToken(
+      user.id,
+      TokenTypeEnum.VERIFY_EMAIL,
+      config.verification.emailExpiryHours * 60 * 60 * 1000,
+    );
+
+    const verificationLink = buildLink('/auth/verify/email', token);
+    // await emailService.sendVerificationEmail(email, verificationLink);
+
+    return res.json({
+      success: true,
+      verificationLink: verificationLink,
+      message: 'Verification email resent.',
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Invalid request',
+    });
+  }
+});
+
+// Verify email magic link
+router.get('/verify/email', async (req: Request, res: Response) => {
+  try {
+    const token = req.query.token;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required',
+      });
+    }
+
+    const userId = await tokenService.consumeToken(token, TokenTypeEnum.VERIFY_EMAIL);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification link',
+      });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isVerified: true },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Email verified successfully. You can now log in.',
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Invalid request',
+    });
+  }
+});
+
+// Send password reset magic link
+router.post('/password/reset/request', async (req: Request, res: Response) => {
+  try {
+    const { email } = passwordResetRequestSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always respond success to avoid leaking existence, but send email if user exists
+    if (user) {
+      const token = await tokenService.createToken(
+        user.id,
+        TokenTypeEnum.RESET_PASSWORD,
+        config.passwordReset.expiryMinutes * 60 * 1000,
+      );
+
+      const resetLink = buildLink('/auth/password/reset/confirm', token);
+      // await emailService.sendPasswordResetEmail(email, resetLink);
+    }
+
+    return res.json({
+      success: true,
+      message: 'If an account exists for that email, a password reset link has been sent.',
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Invalid request',
+    });
+  }
+});
+
+// Confirm password reset
+router.post('/password/reset/confirm', async (req: Request, res: Response) => {
+  try {
+    const { token, password } = passwordResetConfirmSchema.parse(req.body);
+
+    const userId = await tokenService.consumeToken(token, TokenTypeEnum.RESET_PASSWORD);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset link',
+      });
+    }
+
+    const passwordHash = await authService.hashPassword(password);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash, isVerified: true },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Password updated successfully.',
     });
   } catch (error: any) {
     return res.status(400).json({

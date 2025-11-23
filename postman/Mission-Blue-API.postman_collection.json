@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Mission Blue Backend API",
-    "description": "API collection for Mission Blue backend with mobile/email OTP authentication",
+    "description": "API collection for Mission Blue backend with email/mobile + password authentication",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -48,7 +48,8 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "    pm.collectionVariables.set(\"userId\", response.user?.id || response.userId);",
+                  "    pm.collectionVariables.set(\"token\", response.token);",
                   "}"
                 ]
               }
@@ -64,7 +65,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"+1234567890\",\n  \"name\": \"John Doe\"\n}"
+              "raw": "{\n  \"mobile\": \"+1234567890\",\n  \"name\": \"John Doe\",\n  \"password\": \"ChangeMe123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register/mobile",
@@ -82,7 +83,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "    pm.collectionVariables.set(\"userId\", response.user?.id || response.userId);",
                   "}"
                 ]
               }
@@ -98,7 +99,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"Jane Doe\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"Jane Doe\",\n  \"password\": \"ChangeMe123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register/email",
@@ -116,7 +117,8 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
+                  "    pm.collectionVariables.set(\"userId\", response.user?.id || response.userId);",
+                  "    pm.collectionVariables.set(\"token\", response.token);",
                   "}"
                 ]
               }
@@ -132,7 +134,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"+1234567890\"\n}"
+              "raw": "{\n  \"mobile\": \"+1234567890\",\n  \"password\": \"ChangeMe123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login/mobile",
@@ -150,40 +152,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    pm.environment.set(\"userId\", response.userId);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login/email",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login", "email"]
-            }
-          }
-        },
-        {
-          "name": "Verify OTP",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"userId\", response.user?.id || response.userId);",
                   "    pm.collectionVariables.set(\"token\", response.token);",
                   "}"
                 ]
@@ -200,35 +169,93 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contact\": \"+1234567890\",\n  \"code\": \"123456\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"ChangeMe123\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/verify",
+              "raw": "{{baseUrl}}/auth/login/email",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "verify"]
-            },
-            "description": "Verify OTP code. Use mobile number or email as contact."
+              "path": ["auth", "login", "email"]
+            }
           }
         },
         {
-          "name": "Logout",
+          "name": "Resend Verification Email",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify/email/resend",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify", "email", "resend"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email (Magic Link)",
+          "request": {
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/auth/logout",
+              "raw": "{{baseUrl}}/auth/verify/email?token={{verificationToken}}",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "logout"]
+              "path": ["auth", "verify", "email"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{verificationToken}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Password Reset Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/reset/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "password", "reset", "request"]
+            }
+          }
+        },
+        {
+          "name": "Password Reset Confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"NewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/reset/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "password", "reset", "confirm"]
             }
           }
         }

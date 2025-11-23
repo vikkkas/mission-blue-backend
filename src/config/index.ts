@@ -6,6 +6,7 @@ export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL || '',
+  appUrl: process.env.APP_URL || 'http://localhost:3000/api/v1',
   
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
@@ -16,24 +17,22 @@ export const config = {
     secret: process.env.JWT_SECRET || 'default-secret-change-me',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
-  
-  otp: {
-    expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES || '5', 10),
-    length: parseInt(process.env.OTP_LENGTH || '6', 10),
-  },
-  
+
   email: {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || '587', 10),
     user: process.env.EMAIL_USER || '',
     password: process.env.EMAIL_PASSWORD || '',
     from: process.env.EMAIL_FROM || 'noreply@missionblue.com',
+    secure: process.env.EMAIL_SECURE === 'true',
   },
-  
-  twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-    authToken: process.env.TWILIO_AUTH_TOKEN || '',
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER || '',
+
+  verification: {
+    emailExpiryHours: parseInt(process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || '24', 10),
+  },
+
+  passwordReset: {
+    expiryMinutes: parseInt(process.env.PASSWORD_RESET_EXPIRY_MINUTES || '30', 10),
   },
   
   rateLimit: {

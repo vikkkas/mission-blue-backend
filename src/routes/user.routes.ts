@@ -40,8 +40,8 @@ router.patch('/me', authenticate, async (req: AuthRequest, res: Response) => {
       where: { id: req.user!.id },
       data: {
         ...(name && { name }),
-        ...(email && { email, isVerified: false }),
-        ...(mobile && { mobile, isVerified: false }),
+        ...(email && { email }),
+        ...(mobile && { mobile }),
       },
       select: {
         id: true,

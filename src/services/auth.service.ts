@@ -1,8 +1,25 @@
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import { config } from '../config';
 
 export class AuthService {
+  /**
+   * Hash plaintext password
+   */
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
+  }
+
+  /**
+   * Compare plaintext password against stored hash
+   */
+  async verifyPassword(password: string, hash?: string | null): Promise<boolean> {
+    if (!hash) return false;
+    return bcrypt.compare(password, hash);
+  }
+
   /**
    * Generate JWT token
    */

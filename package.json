@@ -1,7 +1,7 @@
 {
   "name": "mission-blue-backend",
   "version": "1.0.0",
-  "description": "Fast TypeScript backend with Express, Prisma and OTP authentication",
+  "description": "Fast TypeScript backend with Express, Prisma and password authentication",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -17,8 +17,8 @@
     "express",
     "prisma",
     "typescript",
-    "otp",
-    "authentication"
+    "authentication",
+    "password"
   ],
   "author": "",
   "license": "MIT",
@@ -34,7 +34,6 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "nodemailer": "^6.9.15",
-    "twilio": "^5.3.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
