@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import prisma from '../config/database';
-import { TokenTypeEnum, TokenTypeValue } from '../utils/tokenTypes';
+import { TokenTypeValue } from '../utils/tokenTypes';
 
 class TokenService {
   generateToken(): string {

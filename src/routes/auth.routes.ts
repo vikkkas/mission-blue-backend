@@ -60,14 +60,14 @@ router.post('/register/mobile', async (req: Request, res: Response) => {
 
     const token = await authService.createSession(user.id);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Account created successfully',
       token,
       user: sanitizeUser(user),
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message || 'Invalid request',
     });
@@ -103,13 +103,13 @@ router.post('/register/email', async (req: Request, res: Response) => {
     const verificationLink = buildLink('/verify-email', token);
     await emailService.sendVerificationEmail(email, verificationLink);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Verification email sent. Please check your inbox to verify your account.',
       user: sanitizeUser(user),
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message || 'Invalid request',
     });
