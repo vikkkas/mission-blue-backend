@@ -22,6 +22,7 @@ model User {
   sessions  Session[]
   passwordHash String?
   verificationTokens VerificationToken[]
+  profile   Profile?
 
   @@index([mobile])
   @@index([email])
@@ -56,4 +57,37 @@ model Session {
 
   @@index([userId])
   @@index([token])
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String
+  dob          DateTime
+  gender       String
+  nationality  String
+  passport     String?
+  email        String
+  mobile       String
+  altMobile    String?
+  address      String
+  pincode      String
+  organization String
+  designation  String
+  industry     String
+  linkedin     String?
+  referral     String?
+  volunteer    String?
+  interests    String[] @default([])
+  termsConsent Boolean
+  mediaConsent Boolean
+  dataConsent  Boolean
+  photoUrl     String?
+  idProofUrl   String?
+  studentIdUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
 }

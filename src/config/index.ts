@@ -6,7 +6,7 @@ export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL || '',
-  appUrl: process.env.APP_URL || 'http://localhost:3000/api/v1',
+  appUrl: process.env.APP_URL || 'http://localhost:3000',
   
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
@@ -38,5 +38,14 @@ export const config = {
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+  },
+
+  aws: {
+    region: process.env.AWS_REGION || 'us-east-1',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    bucket: process.env.S3_BUCKET || '',
+    presignExpires: parseInt(process.env.S3_PRESIGNED_EXPIRES || '900', 10), // seconds
+    baseUrl: process.env.S3_BASE_URL || '',
   },
 };

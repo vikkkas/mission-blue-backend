@@ -100,8 +100,8 @@ router.post('/register/email', async (req: Request, res: Response) => {
       config.verification.emailExpiryHours * 60 * 60 * 1000,
     );
 
-    const verificationLink = buildLink('/auth/verify/email', token);
-    // await emailService.sendVerificationEmail(email, verificationLink);
+    const verificationLink = buildLink('/verify-email', token);
+    await emailService.sendVerificationEmail(email, verificationLink);
 
     res.json({
       success: true,
@@ -235,12 +235,11 @@ router.post('/verify/email/resend', async (req: Request, res: Response) => {
       config.verification.emailExpiryHours * 60 * 60 * 1000,
     );
 
-    const verificationLink = buildLink('/auth/verify/email', token);
-    // await emailService.sendVerificationEmail(email, verificationLink);
+    const verificationLink = buildLink('/verify-email', token);
+    await emailService.sendVerificationEmail(email, verificationLink);
 
     return res.json({
       success: true,
-      verificationLink: verificationLink,
       message: 'Verification email resent.',
     });
   } catch (error: any) {
@@ -304,8 +303,8 @@ router.post('/password/reset/request', async (req: Request, res: Response) => {
         config.passwordReset.expiryMinutes * 60 * 1000,
       );
 
-      const resetLink = buildLink('/auth/password/reset/confirm', token);
-      // await emailService.sendPasswordResetEmail(email, resetLink);
+      const resetLink = buildLink('/reset-password', token);
+      await emailService.sendPasswordResetEmail(email, resetLink);
     }
 
     return res.json({

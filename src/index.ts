@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import uploadRoutes from './routes/upload.routes';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/uploads', uploadRoutes);
 
 // Error handling
 app.use(notFoundHandler);
