@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 import prisma from '../config/database';
 import authService from '../services/auth.service';
 import emailService from '../services/email.service';
@@ -67,6 +68,13 @@ router.post('/register/mobile', async (req: Request, res: Response) => {
       user: sanitizeUser(user),
     });
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      return res.status(400).json({
+        success: false,
+        message: firstError.message,
+      });
+    }
     return res.status(400).json({
       success: false,
       message: error.message || 'Invalid request',
@@ -109,6 +117,13 @@ router.post('/register/email', async (req: Request, res: Response) => {
       user: sanitizeUser(user),
     });
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      return res.status(400).json({
+        success: false,
+        message: firstError.message,
+      });
+    }
     return res.status(400).json({
       success: false,
       message: error.message || 'Invalid request',
