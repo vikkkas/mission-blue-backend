@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import logger from '../utils/logger';
 
 export class AppError extends Error {
   statusCode: number;
@@ -26,8 +27,7 @@ export const errorHandler = (
     });
   }
 
-  // Log unexpected errors
-  console.error('ERROR 💥:', err);
+  logger.error({ err }, 'Unexpected error');
 
   return res.status(500).json({
     success: false,
