@@ -39,48 +39,6 @@ const sanitizeUser = (user: any) => ({
 
 const buildLink = (path: string, token: string) => `${config.appUrl}${path}?token=${token}`;
 
-// Register with mobile
-router.post('/register/mobile', async (req: Request, res: Response) => {
-  try {
-    const { mobile, name, password } = registerMobileSchema.parse(req.body);
-
-    const existingUser = await prisma.user.findUnique({ where: { mobile } });
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'Mobile number already registered',
-      });
-    }
-
-    const passwordHash = await authService.hashPassword(password);
-
-    const user = await prisma.user.create({
-      data: { mobile, name, passwordHash, isVerified: true },
-    });
-
-    const token = await authService.createSession(user.id);
-
-    return res.json({
-      success: true,
-      message: 'Account created successfully',
-      token,
-      user: sanitizeUser(user),
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      return res.status(400).json({
-        success: false,
-        message: firstError.message,
-      });
-    }
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Invalid request',
-    });
-  }
-});
 
 // Register with email
 router.post('/register/email', async (req: Request, res: Response) => {
@@ -124,52 +82,6 @@ router.post('/register/email', async (req: Request, res: Response) => {
         message: firstError.message,
       });
     }
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Invalid request',
-    });
-  }
-});
-
-// Login with mobile
-router.post('/login/mobile', async (req: Request, res: Response) => {
-  try {
-    const { mobile, password } = loginWithMobileSchema.parse(req.body);
-
-    const user = await prisma.user.findUnique({ where: { mobile } });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: 'Please verify your email before logging in.',
-      });
-    }
-
-    const passwordMatches = await authService.verifyPassword(password, user.passwordHash);
-
-    if (!passwordMatches) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
-
-    const token = await authService.createSession(user.id);
-
-    return res.json({
-      success: true,
-      message: 'Logged in successfully',
-      token,
-      user: sanitizeUser(user),
-    });
-  } catch (error: any) {
     return res.status(400).json({
       success: false,
       message: error.message || 'Invalid request',
