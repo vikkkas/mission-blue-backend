@@ -6,10 +6,8 @@ import authService from '../services/auth.service';
 import emailService from '../services/email.service';
 import tokenService from '../services/token.service';
 import {
-  registerMobileSchema,
   registerEmailSchema,
   loginWithEmailSchema,
-  loginWithMobileSchema,
   resendVerificationSchema,
   passwordResetRequestSchema,
   passwordResetConfirmSchema,
