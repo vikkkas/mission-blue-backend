@@ -25,6 +25,7 @@ export const config = {
     password: process.env.EMAIL_PASSWORD || '',
     from: process.env.EMAIL_FROM || 'noreply@missionblue.com',
     secure: process.env.EMAIL_SECURE === 'true',
+    resendApiKey: process.env.RESEND_API_KEY || '',
   },
 
   verification: {
@@ -48,4 +49,6 @@ export const config = {
     presignExpires: parseInt(process.env.S3_PRESIGNED_EXPIRES || '900', 10), // seconds
     baseUrl: process.env.S3_BASE_URL || '',
   },
+
+  logLevel: process.env.LOG_LEVEL || 'info',
 };

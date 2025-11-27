@@ -9,6 +9,7 @@ import { notFoundHandler } from './middleware/notFound.middleware';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import uploadRoutes from './routes/upload.routes';
+import logger from './utils/logger';
 
 const app = express();
 
@@ -37,9 +38,7 @@ app.use(errorHandler);
 const PORT = config.port;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Environment: ${config.nodeEnv}`);
+  logger.info({ port: PORT, env: config.nodeEnv }, 'Server started');
 });
 
 export default app;
-
